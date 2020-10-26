@@ -172,6 +172,10 @@ exec cpu' instr =
             compute cpu' (computation rop) rrd (reg cpu' rrs2) (reg cpu' rrs1)
         Imm (ImmInstr { iop, ird, irs, iimm }) ->
             compute cpu' (computationI iop) ird (reg cpu' irs) iimm
+        Load (LoadInstr {}) ->
+            undefined
+        Store (StoreInstr {}) ->
+            undefined
         Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
             let pc' = if cmp branch (reg cpu' brs2) (reg cpu' brs1)  then
                           address $ alu AddA (value $ pc cpu') bimm
@@ -179,6 +183,9 @@ exec cpu' instr =
                           pc cpu' + 1
             in
                 continue cpu'{ pc = pc'}
+        Jump (JumpInstr {}) ->
+            undefined
+
 
 decode :: BitVector 32 -> Instr
 decode instr = undefined
