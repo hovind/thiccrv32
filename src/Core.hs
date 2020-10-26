@@ -127,10 +127,9 @@ data BranchInstr = BranchInstr
     , branch :: !Branch
     }
 
-data JumpInstr = JumpInstr
-    { jimm :: !(BitVector 20)
-    , jrd :: !Register
-    }
+data JumpInstr
+    = JAL !Register !(BitVector 20)
+    | JALR !Register !Register !(BitVector 12)
 
 cmp :: Branch -> Value -> Value -> Bool
 cmp branch lhs rhs =
@@ -156,7 +155,7 @@ continue cpu' = undefined
 
 
 load :: Cpu -> Register -> Value -> (Cpu, CpuOut)
-load cpu' reg value = continue cpu' { stage = Executing, registers = replace reg value $ registers cpu' }
+load cpu' reg' value = continue cpu' { stage = Executing, registers = replace reg' value $ registers cpu' }
 
 compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
 compute cpu' comp rd rs2 rs1 =
@@ -164,6 +163,13 @@ compute cpu' comp rd rs2 rs1 =
                     ALU op' -> alu op' rs2 rs1
                     BLU branch' -> boolToBV $ cmp branch' rs2 rs1
     in continue cpu' { registers = replace rd value $ registers cpu' }
+
+jump :: Cpu -> Register -> Value -> Value -> (Cpu, CpuOut)
+jump cpu' rd base offset =
+    continue cpu' { pc = address $ alu AddA base offset
+                  , registers = replace rd (val $ incr $ pc cpu') $ registers cpu'
+                  }
+
 
 exec :: Cpu -> Instr -> (Cpu, CpuOut)
 exec cpu' instr =
@@ -178,14 +184,17 @@ exec cpu' instr =
             undefined
         Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
             let pc' = if cmp branch (reg cpu' brs2) (reg cpu' brs1)  then
-                          address $ alu AddA (value $ pc cpu') bimm
+                          address $ alu AddA (val $ pc cpu') bimm
                       else
                           pc cpu' + 1
-            in
-                continue cpu'{ pc = pc'}
-        Jump (JumpInstr {}) ->
-            undefined
+            in continue cpu' { pc = pc'}
+        Jump (JAL rd imm) ->
+            jump cpu' rd (val $ pc cpu') (pack $ signExtend $ signed $ imm `shiftL` 1)
+        Jump (JALR rd rs imm) ->
+            jump cpu' rd (reg cpu' rd) (pack $ signExtend $ signed imm)
 
+incr :: Addr -> Addr
+incr pc' = pc' + 4
 
 decode :: BitVector 32 -> Instr
 decode instr = undefined
@@ -200,16 +209,16 @@ type Register = Index NReg
 
 type Addr = Unsigned 32
 
-value :: Addr -> Value
-value = pack
+val :: Addr -> Value
+val = pack
 
 address :: Value -> Addr
 address = unpack
 
-signed :: Value -> Signed 32
+signed :: KnownNat n => BitVector n -> Signed n
 signed = unpack
 
-unsigned :: Value -> Unsigned 32
+unsigned :: KnownNat n => BitVector n -> Unsigned n
 unsigned = unpack
 
 newtype CpuIn = CpuIn
@@ -249,8 +258,8 @@ cpu cpu' input =
             continue $ cpu' { stage = Executing }
         Executing ->
             exec cpu' $ decode $ dataIn input
-        Loading reg ->
-            load cpu' reg $ dataIn input
+        Loading reg' ->
+            load cpu' reg' $ dataIn input
 
 
 
