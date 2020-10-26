@@ -13,7 +13,7 @@ data Instr
     -- Register?
     | Imm ImmInstr
     -- Immediate?
-    | Load LoadInstr
+    | Load !Width !Register !Register !(BitVector 12)
     -- LUI (load upper immediate) is used to build 32-bit constants and uses the U-type format
     | Store StoreInstr
     -- Loads are encoded in the I-type format and stores are S-type
@@ -83,8 +83,6 @@ data UpperImmInstr = UpperImmInstr
     , func3 :: !Funct3
     , urd :: !Register
     }
-
-data LoadInstr = LoadInstr
 
 data StoreInstr = StoreInstr
     { simm :: !(BitVector 12)
@@ -166,7 +164,7 @@ compute cpu' comp rd rs2 rs1 =
 
 jump :: Cpu -> Register -> Value -> Value -> (Cpu, CpuOut)
 jump cpu' rd base offset =
-    continue cpu' { pc = address $ alu AddA base offset
+    continue cpu' { pc = addr $ alu AddA base offset
                   , registers = replace rd (val $ incr $ pc cpu') $ registers cpu'
                   }
 
@@ -178,13 +176,13 @@ exec cpu' instr =
             compute cpu' (computation rop) rrd (reg cpu' rrs2) (reg cpu' rrs1)
         Imm (ImmInstr { iop, ird, irs, iimm }) ->
             compute cpu' (computationI iop) ird (reg cpu' irs) iimm
-        Load (LoadInstr {}) ->
-            undefined
+        Load width rd rs imm ->
+            (cpu' { stage = Loading rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (extend imm), write = Nothing })
         Store (StoreInstr {}) ->
             undefined
         Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
             let pc' = if cmp branch (reg cpu' brs2) (reg cpu' brs1)  then
-                          address $ alu AddA (val $ pc cpu') bimm
+                          addr $ alu AddA (val $ pc cpu') bimm
                       else
                           incr $ pc cpu'
             in continue cpu' { pc = pc'}
@@ -215,8 +213,8 @@ type Addr = Unsigned 32
 val :: Addr -> Value
 val = pack
 
-address :: Value -> Addr
-address = unpack
+addr :: Value -> Addr
+addr = unpack
 
 signed :: KnownNat n => BitVector n -> Signed n
 signed = unpack
