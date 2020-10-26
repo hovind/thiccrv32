@@ -93,8 +93,8 @@ data StoreInstr = StoreInstr
 
 data Width
     = Word
-    | HalfWord
-    | Byte
+    | HalfWord !Sign
+    | Byte !Sign
 
 data Sign
     = Signed
@@ -152,8 +152,8 @@ continue :: Cpu -> (Cpu, CpuOut)
 continue cpu' = undefined
 
 
-load :: Cpu -> Register -> Value -> (Cpu, CpuOut)
-load cpu' reg' value = continue cpu' { stage = Executing, registers = replace reg' value $ registers cpu' }
+load :: Cpu -> Width -> Register -> Value -> (Cpu, CpuOut)
+load cpu' width' reg' value = continue cpu' { stage = Executing, registers = replace reg' value $ registers cpu' }
 
 compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
 compute cpu' comp rd rs2 rs1 =
@@ -177,7 +177,7 @@ exec cpu' instr =
         Imm (ImmInstr { iop, ird, irs, iimm }) ->
             compute cpu' (computationI iop) ird (reg cpu' irs) iimm
         Load width rd rs imm ->
-            (cpu' { stage = Loading rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (extend imm), write = Nothing })
+            (cpu' { stage = Loading width rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (extend imm), write = Nothing })
         Store (StoreInstr {}) ->
             undefined
         Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
@@ -250,7 +250,7 @@ data Cpu = Cpu
 data Stage
     = Initialising -- Waiting for first instruction
     | Executing -- Advance PC
-    | Loading Register -- Don't advance PC
+    | Loading !Width !Register -- Don't advance PC
 
 cpu :: Cpu -> CpuIn -> (Cpu, CpuOut)
 cpu cpu' input =
@@ -259,8 +259,8 @@ cpu cpu' input =
             continue $ cpu' { stage = Executing }
         Executing ->
             exec cpu' $ decode $ dataIn input
-        Loading reg' ->
-            load cpu' reg' $ dataIn input
+        Loading width' reg' ->
+            load cpu' width' reg' $ dataIn input
 
 
 
