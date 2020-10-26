@@ -162,7 +162,7 @@ compute cpu' comp rd rs2 rs1 =
     let value = case comp of
                     ALU op' -> alu op' rs2 rs1
                     BLU branch' -> boolToBV $ cmp branch' rs2 rs1
-    in continue cpu' { registers = replace rd value $ registers cpu' }
+    in continue $ next cpu' { registers = replace rd value $ registers cpu' }
 
 jump :: Cpu -> Register -> Value -> Value -> (Cpu, CpuOut)
 jump cpu' rd base offset =
@@ -186,7 +186,7 @@ exec cpu' instr =
             let pc' = if cmp branch (reg cpu' brs2) (reg cpu' brs1)  then
                           address $ alu AddA (val $ pc cpu') bimm
                       else
-                          pc cpu' + 1
+                          incr $ pc cpu'
             in continue cpu' { pc = pc'}
         Jump (JAL rd imm) ->
             jump cpu' rd (val $ pc cpu') (pack $ signExtend $ signed $ imm `shiftL` 1)
@@ -195,6 +195,9 @@ exec cpu' instr =
 
 incr :: Addr -> Addr
 incr pc' = pc' + 4
+
+next :: Cpu -> Cpu
+next cpu' = cpu' { pc = incr $ pc cpu' }
 
 decode :: BitVector 32 -> Instr
 decode instr = undefined
