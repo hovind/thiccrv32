@@ -54,11 +54,11 @@ data Computation
     = ALU OpA
     | BLU Branch
 
-computeI :: OpI -> Computation
-computeI = undefined
+computationI :: OpI -> Computation
+computationI = undefined
 
-compute :: Op -> Computation
-compute = undefined
+computation :: Op -> Computation
+computation = undefined
 
 -- Arithmetic operation
 data OpA
@@ -158,19 +158,23 @@ continue cpu' = undefined
 load :: Cpu -> Register -> Value -> (Cpu, CpuOut)
 load cpu' reg value = continue cpu' { stage = Executing, registers = replace reg value $ registers cpu' }
 
+compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
+compute cpu' comp rd rs2 rs1 =
+    let value = case comp of
+                    ALU op' -> alu op' rs2 rs1
+                    BLU branch' -> boolToBV $ cmp branch' rs2 rs1
+    in continue cpu' { registers = replace rd value $ registers cpu' }
 
 exec :: Cpu -> Instr -> (Cpu, CpuOut)
 exec cpu' instr =
     case instr of
         Reg (RegInstr { rop, rrd, rrs2, rrs1 }) ->
-            let value = alu (compute rop) (reg cpu' rrs2) (reg cpu' rrs1)
-            in continue cpu' { registers = replace rrd value $ registers cpu' }
+            compute cpu' (computation rop) rrd (reg cpu' rrs2) (reg cpu' rrs1)
         Imm (ImmInstr { iop, ird, irs, iimm }) ->
-            let value = alu (computeI iop) (reg cpu' irs) iimm
-            in continue cpu' { registers = replace ird value $ registers cpu' }
+            compute cpu' (computationI iop) ird (reg cpu' irs) iimm
         Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
             let pc' = if cmp branch (reg cpu' brs2) (reg cpu' brs1)  then
-                          address $ alu (ALU AddA) (value $ pc cpu') bimm
+                          address $ alu AddA (value $ pc cpu') bimm
                       else
                           pc cpu' + 1
             in
@@ -243,7 +247,7 @@ cpu cpu' input =
 
 
 
-alu :: Computation -> Value -> Value -> Value
+alu :: OpA -> Value -> Value -> Value
 alu = undefined
 
 
