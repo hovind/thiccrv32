@@ -187,9 +187,9 @@ exec cpu' instr =
                           incr $ pc cpu'
             in continue cpu' { pc = pc'}
         Jump (JAL rd imm) ->
-            jump cpu' rd (val $ pc cpu') (pack $ signExtend $ signed $ imm `shiftL` 1)
+            jump cpu' rd (val $ pc cpu') (pack $ signExtend $ imm `shiftL` 1)
         Jump (JALR rd rs imm) ->
-            jump cpu' rd (reg cpu' rd) (pack $ signExtend $ signed imm)
+            jump cpu' rd (reg cpu' rd) (pack $ signExtend imm)
 
 incr :: Addr -> Addr
 incr pc' = pc' + 4
