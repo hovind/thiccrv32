@@ -15,12 +15,17 @@ data Instr
     -- Immediate?
     | Load !Width !Register !Register !(BitVector 12)
     -- LUI (load upper immediate) is used to build 32-bit constants and uses the U-type format
-    | Store StoreInstr
+    | Store
     -- Loads are encoded in the I-type format and stores are S-type
-    | Branch BranchInstr
+    | Branch !Branch !Register !Register !(BitVector 12)
     -- All branch instructions use the B-type instruction format
-    | Jump JumpInstr
+    | Jump !JumpInstr
     -- The jump and link (JAL) instruction uses the J-type format
+
+data JumpInstr
+    = JAL !Register !(BitVector 20)
+    | JALR !Register !Register !(BitVector 12)
+
 
 data Op
     = Add
@@ -83,20 +88,6 @@ data OpA
     | SRLA
     | SRAA
 
-data UpperImmInstr = UpperImmInstr
-    { uimm :: !Value
-    , urs :: !Register
-    , func3 :: !Funct3
-    , urd :: !Register
-    }
-
-data StoreInstr = StoreInstr
-    { simm :: !(BitVector 12)
-    , srs2 :: !Register
-    , srs1 :: !Register
-    , width :: !Width
-    }
-
 data Width
     = Word
     | HalfWord !Sign
@@ -111,29 +102,6 @@ data Branch
     | BNE
     | BLT Sign
     | BGE Sign
-
-{-data Op
-    = Add
-    -- Set less than
-    | And
-    | Or
-    | Xor
-    | Sr
-    -- Shift right
-    | Sl
-    -- Shift left
--}
-
-data BranchInstr = BranchInstr
-    { bimm :: !Value
-    , brs2 :: !Register
-    , brs1 :: !Register
-    , branch :: !Branch
-    }
-
-data JumpInstr
-    = JAL !Register !(BitVector 20)
-    | JALR !Register !Register !(BitVector 12)
 
 cmp :: Branch -> Value -> Value -> Bool
 cmp branch lhs rhs =
@@ -184,11 +152,11 @@ exec cpu' instr =
             compute cpu' (computationI op) rd (reg cpu' rs) (signExtend imm)
         Load width rd rs imm ->
             (cpu' { stage = Loading width rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (signExtend imm), write = Nothing })
-        Store (StoreInstr {}) ->
+        Store ->
             undefined
-        Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
-            let pc' = if cmp branch (reg cpu' brs2) (reg cpu' brs1)  then
-                          addr $ alu AddA (val $ pc cpu') bimm
+        Branch branch rs2 rs1 imm ->
+            let pc' = if cmp branch (reg cpu' rs2) (reg cpu' rs1)  then
+                          addr $ alu AddA (val $ pc cpu') (pack $ signExtend $ imm `shiftL` 1)
                       else
                           incr $ pc cpu'
             in continue cpu' { pc = pc'}
