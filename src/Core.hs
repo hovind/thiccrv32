@@ -24,13 +24,13 @@ data Instr
 
 data Op
     = Add
+    | Sub
     | SLT Sign
     | And
     | Or
     | XOr
     | SLL
     | SRL
-    | Sub
     | SRA
 
 data RegInstr = RegInstr
@@ -52,17 +52,37 @@ data OpI
 
 data Computation
     = ALU OpA
-    | BLU Branch
+    | BLU Sign
 
 computationI :: OpI -> Computation
-computationI = undefined
+computationI op =
+    case op of
+        AddI -> ALU AddA
+        SLTI sign -> BLU sign
+        AndI -> ALU AndA
+        OrI -> ALU OrA
+        XOrI -> ALU XOrA
+        SLLI -> ALU SLLA
+        SRLI -> ALU SRLA
+        SRAI -> ALU SRAA
 
 computation :: Op -> Computation
-computation = undefined
+computation op =
+    case op of
+        Add -> ALU AddA
+        Sub -> ALU SubA
+        SLT sign -> BLU sign
+        And -> ALU AndA
+        Or -> ALU OrA
+        XOr -> ALU XOrA
+        SLL -> ALU SLLA
+        SRL -> ALU SRLA
+        SRA -> ALU SRAA
 
 -- Arithmetic operation
 data OpA
     = AddA
+    | SubA
     | AndA
     | OrA
     | XOrA
@@ -159,7 +179,7 @@ compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
 compute cpu' comp rd rs2 rs1 =
     let value = case comp of
                     ALU op' -> alu op' rs2 rs1
-                    BLU branch' -> boolToBV $ cmp branch' rs2 rs1
+                    BLU sign -> boolToBV $ cmp (BLT sign) rs2 rs1
     in continue $ next cpu' { registers = replace rd value $ registers cpu' }
 
 jump :: Cpu -> Register -> Value -> Value -> (Cpu, CpuOut)
@@ -265,7 +285,16 @@ cpu cpu' input =
 
 
 alu :: OpA -> Value -> Value -> Value
-alu = undefined
+alu op rs2 rs1 =
+    case op of
+        AddA -> rs2 + rs1
+        SubA -> rs2 - rs1
+        AndA -> rs2 .&. rs1
+        OrA -> rs2 .|. rs1
+        XOrA -> rs2 `xor` rs1
+        SLLA -> rs2 `shiftL` unpack (resize $ slice d4 d0 rs1) -- TODO: This resize shift is BS
+        SRLA -> rs2 `shiftR` unpack (resize $ slice d4 d0 rs1) -- TODO: This resize is also BS
+        SRAA -> pack $ signed rs2 `shiftR` unpack (resize $ slice d4 d0 rs1)
 
 
 
