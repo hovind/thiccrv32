@@ -25,13 +25,19 @@ Risc-V core goes here, hopefully in a couple of years.
 #### Gergő Érdi blog:
 * https://unsafeperform.io/blog/2018-09-23-cpu_modeling_in_c_ash/
 
-#### Risc-V spec:
+#### Gergő Érdi Intel8080:
+* https://github.com/gergoerdi/clash-intel8080
+
+#### RISC-V spec:
 * https://riscv.org/technical/specifications/
+
+#### RISC-V assembly:
+* https://github.com/riscv/riscv-asm-manual/blob/master/riscv-asm.md
 
 #### Clash docs:
 * http://hackage.haskell.org/package/clash-prelude-1.2.4/docs/Clash-Prelude.html
 
-#### Risc-V formal:
+#### RISC-V formal:
 * https://github.com/SymbioticEDA/riscv-formal
 
 #### Adam Walker implementation
