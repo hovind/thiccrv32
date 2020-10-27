@@ -18,5 +18,8 @@ x2 = 2
 addi :: Register -> Register -> BitVector 12 -> Instr
 addi = Imm AddI
 
+mov :: Register -> Register -> Instr
+mov rd rs = addi rd rs 0
+
 nop :: Instr
 nop = addi x0 x0 0
