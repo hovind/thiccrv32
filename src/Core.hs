@@ -169,7 +169,7 @@ reg :: Cpu -> Register -> Value
 reg = (!!) . registers
 
 continue :: Cpu -> (Cpu, CpuOut)
-continue cpu' = undefined
+continue cpu' = (cpu', CpuOut { read = pc cpu', write = Nothing })
 
 
 load :: Cpu -> Width -> Register -> Value -> (Cpu, CpuOut)
