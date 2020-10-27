@@ -11,7 +11,7 @@ data Funct7 = Funct7
 data Instr
     = Reg !Op !Register !Register !Register
     -- Register?
-    | Imm ImmInstr
+    | Imm !OpI !Register !Register !(BitVector 12)
     -- Immediate?
     | Load !Width !Register !Register !(BitVector 12)
     -- LUI (load upper immediate) is used to build 32-bit constants and uses the U-type format
@@ -82,13 +82,6 @@ data OpA
     | SLLA
     | SRLA
     | SRAA
-
-data ImmInstr = ImmInstr
-    { iop :: !OpI
-    , irs :: !Register
-    , iimm :: !Value
-    , ird :: !Register
-    }
 
 data UpperImmInstr = UpperImmInstr
     { uimm :: !Value
@@ -187,10 +180,10 @@ exec cpu' instr =
     case instr of
         Reg op rd rs2 rs1 ->
             compute cpu' (computation op) rd (reg cpu' rs2) (reg cpu' rs1)
-        Imm (ImmInstr { iop, ird, irs, iimm }) ->
-            compute cpu' (computationI iop) ird (reg cpu' irs) iimm
+        Imm op rd rs imm ->
+            compute cpu' (computationI op) rd (reg cpu' rs) (signExtend imm)
         Load width rd rs imm ->
-            (cpu' { stage = Loading width rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (extend imm), write = Nothing })
+            (cpu' { stage = Loading width rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (signExtend imm), write = Nothing })
         Store (StoreInstr {}) ->
             undefined
         Branch (BranchInstr { branch, brs2, brs1, bimm}) ->
