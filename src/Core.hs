@@ -126,9 +126,6 @@ continue :: Cpu -> (Cpu, CpuOut)
 continue cpu' = (cpu', CpuOut { read = pc cpu', write = Nothing })
 
 
-load :: Cpu -> Width -> Register -> Value -> (Cpu, CpuOut)
-load cpu' width' reg' value = continue cpu' { stage = Executing, registers = replace reg' value $ registers cpu' }
-
 compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
 compute cpu' comp rd rs2 rs1 =
     let value = case comp of
@@ -136,12 +133,15 @@ compute cpu' comp rd rs2 rs1 =
                     BLU sign -> boolToBV $ cmp (BLT sign) rs2 rs1
     in continue $ next cpu' { registers = replace rd value $ registers cpu' }
 
+load :: Cpu -> Width -> Register -> Value -> (Cpu, CpuOut)
+load cpu' width' reg' value =
+    continue cpu' { stage = Executing, registers = replace reg' value $ registers cpu' }
+
 jump :: Cpu -> Register -> Value -> Value -> (Cpu, CpuOut)
 jump cpu' rd base offset =
     continue cpu' { pc = addr $ alu AddA base offset
                   , registers = replace rd (val $ incr $ pc cpu') $ registers cpu'
                   }
-
 
 exec :: Cpu -> Instr -> (Cpu, CpuOut)
 exec cpu' instr =
