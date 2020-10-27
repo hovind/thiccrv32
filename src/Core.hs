@@ -1,52 +1,8 @@
-{-# LANGUAGE DataKinds, DuplicateRecordFields, NamedFieldPuns, NoImplicitPrelude #-}
+{-# LANGUAGE DataKinds, DuplicateRecordFields, NoImplicitPrelude #-}
 module Core where
 
 import Clash.Prelude
-
--- ADDI, SLTI[U], ANDI, ORI, XORI, SLLI; SRLI, SRAI,LUI, AUIPC, ADD, SLT,SLTU,AND,OR,XOR,SLL,SRL,SUB,SRA,NOP,JAL, JALR,BEQ,BNE,BLT[U],BGE[U],LOAD,STORE,ECALL,EBREAK
-data Funct3 = Funct3
-
-data Funct7 = Funct7
-
-data Instr
-    = Reg !Op !Register !Register !Register
-    -- Register?
-    | Imm !OpI !Register !Register !(BitVector 12)
-    -- Immediate?
-    | Load !Width !Register !Register !(BitVector 12)
-    -- LUI (load upper immediate) is used to build 32-bit constants and uses the U-type format
-    | Store !Width !Register !Register !(BitVector 12)
-    -- Loads are encoded in the I-type format and stores are S-type
-    | Branch !Branch !Register !Register !(BitVector 12)
-    -- All branch instructions use the B-type instruction format
-    | Jump !JumpInstr
-    -- The jump and link (JAL) instruction uses the J-type format
-
-data JumpInstr
-    = JAL !Register !(BitVector 20)
-    | JALR !Register !Register !(BitVector 12)
-
-
-data Op
-    = Add
-    | Sub
-    | SLT Sign
-    | And
-    | Or
-    | XOr
-    | SLL
-    | SRL
-    | SRA
-
-data OpI
-    = AddI
-    | SLTI Sign
-    | AndI
-    | OrI
-    | XOrI
-    | SLLI
-    | SRLI
-    | SRAI
+import Clash.RISCV
 
 data Computation
     = ALU OpA
@@ -87,21 +43,6 @@ data OpA
     | SLLA
     | SRLA
     | SRAA
-
-data Width
-    = Word
-    | HalfWord !Sign
-    | Byte !Sign
-
-data Sign
-    = Signed
-    | Unsigned
-
-data Branch
-    = BEq
-    | BNE
-    | BLT Sign
-    | BGE Sign
 
 cmp :: Branch -> Value -> Value -> Bool
 cmp branch lhs rhs =
@@ -175,16 +116,6 @@ next cpu' = cpu' { pc = incr $ pc cpu' }
 decode :: BitVector 32 -> Instr
 decode instr = undefined
 
-
-type XLen = 32 -- Register width
-type NReg = 32 -- Number of registers
-
-type Word = BitVector 32
-type Value = BitVector XLen
-type Register = Index NReg
-
-type Addr = Unsigned 32
-
 val :: Addr -> Value
 val = pack
 
@@ -250,7 +181,6 @@ alu op rs2 rs1 =
         SLLA -> rs2 `shiftL` unpack (resize $ slice d4 d0 rs1) -- TODO: This resize shift is BS
         SRLA -> rs2 `shiftR` unpack (resize $ slice d4 d0 rs1) -- TODO: This resize is also BS
         SRAA -> pack $ signed rs2 `shiftR` unpack (resize $ slice d4 d0 rs1)
-
 
 
 -- bootloader :: File ->
