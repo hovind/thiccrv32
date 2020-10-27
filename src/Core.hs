@@ -156,14 +156,14 @@ exec cpu' instr =
             undefined
         Branch branch rs2 rs1 imm ->
             let pc' = if cmp branch (reg cpu' rs2) (reg cpu' rs1)  then
-                          addr $ alu AddA (val $ pc cpu') (pack $ signExtend $ imm `shiftL` 1)
+                          addr $ alu AddA (val $ pc cpu') (signExtend $ imm `shiftL` 1)
                       else
                           incr $ pc cpu'
             in continue cpu' { pc = pc'}
         Jump (JAL rd imm) ->
-            jump cpu' rd (val $ pc cpu') (pack $ signExtend $ imm `shiftL` 1)
+            jump cpu' rd (val $ pc cpu') (signExtend $ imm `shiftL` 1)
         Jump (JALR rd rs imm) ->
-            jump cpu' rd (reg cpu' rd) (pack $ signExtend imm)
+            jump cpu' rd (reg cpu' rd) (signExtend imm)
 
 incr :: Addr -> Addr
 incr pc' = pc' + 4
