@@ -9,7 +9,7 @@ data Funct3 = Funct3
 data Funct7 = Funct7
 
 data Instr
-    = Reg !RegInstr
+    = Reg !Op !Register !Register !Register
     -- Register?
     | Imm ImmInstr
     -- Immediate?
@@ -32,13 +32,6 @@ data Op
     | SLL
     | SRL
     | SRA
-
-data RegInstr = RegInstr
-    { rop :: !Op
-    , rrs2 :: !Register
-    , rrs1 :: !Register
-    , rrd :: !Register
-    }
 
 data OpI
     = AddI
@@ -192,8 +185,8 @@ jump cpu' rd base offset =
 exec :: Cpu -> Instr -> (Cpu, CpuOut)
 exec cpu' instr =
     case instr of
-        Reg (RegInstr { rop, rrd, rrs2, rrs1 }) ->
-            compute cpu' (computation rop) rrd (reg cpu' rrs2) (reg cpu' rrs1)
+        Reg op rd rs2 rs1 ->
+            compute cpu' (computation op) rd (reg cpu' rs2) (reg cpu' rs1)
         Imm (ImmInstr { iop, ird, irs, iimm }) ->
             compute cpu' (computationI iop) ird (reg cpu' irs) iimm
         Load width rd rs imm ->
