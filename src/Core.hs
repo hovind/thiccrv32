@@ -15,7 +15,7 @@ data Instr
     -- Immediate?
     | Load !Width !Register !Register !(BitVector 12)
     -- LUI (load upper immediate) is used to build 32-bit constants and uses the U-type format
-    | Store
+    | Store !Width !Register !Register !(BitVector 12)
     -- Loads are encoded in the I-type format and stores are S-type
     | Branch !Branch !Register !Register !(BitVector 12)
     -- All branch instructions use the B-type instruction format
@@ -152,8 +152,9 @@ exec cpu' instr =
             compute cpu' (computationI op) rd (reg cpu' rs) (signExtend imm)
         Load width rd rs imm ->
             (cpu' { stage = Loading width rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (signExtend imm), write = Nothing })
-        Store ->
-            undefined
+        Store width rs2 rs1 imm ->
+            let (cpu'', output) = continue $ next cpu'
+            in (cpu'', output { write = Just (addr $ alu AddA (reg cpu' rs2) (signExtend $ imm `shiftL` 1), reg cpu' rs1) })
         Branch branch rs2 rs1 imm ->
             let pc' = if cmp branch (reg cpu' rs2) (reg cpu' rs1)  then
                           addr $ alu AddA (val $ pc cpu') (signExtend $ imm `shiftL` 1)
