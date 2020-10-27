@@ -1,5 +1,3 @@
-{-# LANGUAGE DataKinds, DuplicateRecordFields, NoImplicitPrelude #-}
-
 module Clash.RISCV where
 
 import Clash.Prelude

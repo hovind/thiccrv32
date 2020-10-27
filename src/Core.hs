@@ -1,4 +1,3 @@
-{-# LANGUAGE DataKinds, DuplicateRecordFields, NoImplicitPrelude #-}
 module Core where
 
 import Clash.Prelude
