@@ -165,6 +165,14 @@ data Stage
     | Loading !Width !Register -- Don't advance PC
     deriving (Generic, NFDataX)
 
+memory
+  :: (HiddenClock dom, HiddenEnable dom)
+  => Signal dom CpuOut
+  -> Signal dom CpuIn
+memory cpuOut = CpuIn <$> blockRamPow2 (repeat 0 :: Vec (2 ^ 32) (BitVector 32)) peek' poke'
+  where
+    CpuOut peek' poke' = unbundle cpuOut
+
 system :: HiddenClockResetEnable dom => Signal dom CpuIn -> Signal dom CpuOut
 system = mealy cpu $ Cpu { pc = 0, stage = Initialising, registers = replicate d32 0, trap = () }
 
