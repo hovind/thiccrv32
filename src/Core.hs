@@ -173,8 +173,12 @@ memory cpuOut = CpuIn <$> blockRamPow2 (repeat 0 :: Vec (2 ^ 32) (BitVector 32))
   where
     CpuOut peek' poke' = unbundle cpuOut
 
-system :: HiddenClockResetEnable dom => Signal dom CpuIn -> Signal dom CpuOut
-system = mealy cpu $ Cpu { pc = 0, stage = Initialising, registers = replicate d32 0, trap = () }
+system :: HiddenClockResetEnable dom => Signal dom (BitVector 32)
+system = dataIn <$> memoryOut
+  where
+    memoryOut = memory cpuOut
+    cpuOut = mealy cpu cpu' memoryOut
+    cpu' = Cpu { pc = 0, stage = Initialising, registers = replicate d32 0, trap = () }
 
 cpu :: Cpu -> CpuIn -> (Cpu, CpuOut)
 cpu cpu' input =
