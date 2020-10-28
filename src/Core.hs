@@ -141,7 +141,7 @@ data Cpu = Cpu
     , stage :: !Stage
     , registers :: !(Vec NReg Value)
     , trap :: !()
-    }
+    } deriving (Generic, NFDataX)
 
 -- BUSES
 -- READ: LOAD, READ INSTR
@@ -156,6 +156,10 @@ data Stage
     = Initialising -- Waiting for first instruction
     | Executing -- Advance PC
     | Loading !Width !Register -- Don't advance PC
+    deriving (Generic, NFDataX)
+
+system :: HiddenClockResetEnable dom => Signal dom CpuIn -> Signal dom CpuOut
+system = mealy cpu $ Cpu { pc = 0, stage = Initialising, registers = replicate d32 0, trap = () }
 
 cpu :: Cpu -> CpuIn -> (Cpu, CpuOut)
 cpu cpu' input =

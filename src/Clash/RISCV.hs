@@ -54,10 +54,12 @@ data Width
     = Word
     | HalfWord !Sign
     | Byte !Sign
+    deriving (Generic, NFDataX)
 
 data Sign
     = Signed
     | Unsigned
+    deriving (Generic, NFDataX)
 
 data Branch
     = BEq

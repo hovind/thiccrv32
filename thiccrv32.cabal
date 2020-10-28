@@ -24,6 +24,8 @@ library
                        clash-prelude == 1.2.4
   default-extensions:
     DataKinds,
+    DeriveAnyClass,
+    DeriveGeneric,
     DuplicateRecordFields,
     NoImplicitPrelude
   ghc-options:
