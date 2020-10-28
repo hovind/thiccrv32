@@ -27,7 +27,8 @@ library
     DeriveAnyClass,
     DeriveGeneric,
     DuplicateRecordFields,
-    NoImplicitPrelude
+    NoImplicitPrelude,
+    TypeFamilies
   ghc-options:
     -fwarn-tabs
     -fwarn-unused-imports

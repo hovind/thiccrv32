@@ -63,7 +63,7 @@ reg :: Cpu -> Register -> Value
 reg = (!!) . registers
 
 continue :: Cpu -> (Cpu, CpuOut)
-continue cpu' = (cpu', CpuOut { read = pc cpu', write = Nothing })
+continue cpu' = (cpu', CpuOut { peek = pc cpu', poke = Nothing })
 
 
 compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
@@ -91,10 +91,10 @@ exec cpu' instr =
         Imm op rd rs imm ->
             compute cpu' (computationI op) rd (reg cpu' rs) (signExtend imm)
         Load width rd rs imm ->
-            (cpu' { stage = Loading width rd }, CpuOut { read = addr $ alu AddA (reg cpu' rs) (signExtend imm), write = Nothing })
+            (cpu' { stage = Loading width rd }, CpuOut { peek = addr $ alu AddA (reg cpu' rs) (signExtend imm), poke = Nothing })
         Store width rs2 rs1 imm ->
             let (cpu'', output) = continue $ next cpu'
-            in (cpu'', output { write = Just (addr $ alu AddA (reg cpu' rs2) (signExtend $ imm `shiftL` 1), reg cpu' rs1) })
+            in (cpu'', output { poke = Just (addr $ alu AddA (reg cpu' rs2) (signExtend $ imm `shiftL` 1), reg cpu' rs1) })
         Branch branch rs2 rs1 imm ->
             let pc' = if cmp branch (reg cpu' rs2) (reg cpu' rs1)  then
                           addr $ alu AddA (val $ pc cpu') (signExtend $ imm `shiftL` 1)
@@ -131,10 +131,17 @@ newtype CpuIn = CpuIn
     { dataIn :: Value
     }
 
-data CpuOut = CpuOut
-    { read :: !Addr
-    , write :: !(Maybe (Addr, Value))
+data CpuOut' a b = CpuOut
+    { peek :: !a
+    , poke :: !b
     }
+
+type CpuOut = CpuOut' Addr (Maybe (Addr, BitVector 32))
+
+instance Bundle (CpuOut' a b) where
+  type Unbundled t (CpuOut' a b) = CpuOut' (Signal t a) (Signal t b)
+  bundle (CpuOut a b) = CpuOut <$> a <*> b
+  unbundle out = CpuOut (peek <$> out) (poke <$> out)
 
 data Cpu = Cpu
     { pc :: !Addr
