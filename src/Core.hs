@@ -65,7 +65,6 @@ reg = (!!) . registers
 continue :: Cpu -> (Cpu, CpuOut)
 continue cpu' = (cpu', CpuOut { peek = pc cpu', poke = Nothing })
 
-
 compute :: Cpu -> Computation -> Register -> Value -> Value -> (Cpu, CpuOut)
 compute cpu' comp rd rs2 rs1 =
     let value = case comp of
@@ -190,8 +189,6 @@ cpu cpu' input =
         Loading width' reg' ->
             load cpu' width' reg' $ dataIn input
 
-
-
 alu :: OpA -> Value -> Value -> Value
 alu op rs2 rs1 =
     case op of
@@ -203,6 +200,3 @@ alu op rs2 rs1 =
         SLLA -> rs2 `shiftL` unpack (resize $ slice d4 d0 rs1) -- TODO: This resize shift is BS
         SRLA -> rs2 `shiftR` unpack (resize $ slice d4 d0 rs1) -- TODO: This resize is also BS
         SRAA -> pack $ signed rs2 `shiftR` unpack (resize $ slice d4 d0 rs1)
-
-
--- bootloader :: File ->
