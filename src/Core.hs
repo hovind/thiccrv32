@@ -73,7 +73,8 @@ compute cpu' comp rd rs2 rs1 =
     in continue $ next cpu' { registers = replace rd value $ registers cpu' }
 
 load :: Cpu -> Width -> Register -> Value -> (Cpu, CpuOut)
-load cpu' width' reg' value =
+load cpu' _ reg' value =
+    -- TODO: Support different widths
     continue cpu' { stage = Executing, registers = replace reg' value $ registers cpu' }
 
 jump :: Cpu -> Register -> Value -> Value -> (Cpu, CpuOut)
@@ -91,7 +92,8 @@ exec cpu' instr =
             compute cpu' (computationI op) rd (reg cpu' rs) (signExtend imm)
         Load width rd rs imm ->
             (cpu' { stage = Loading width rd }, CpuOut { peek = addr $ alu AddA (reg cpu' rs) (signExtend imm), poke = Nothing })
-        Store width rs2 rs1 imm ->
+        -- TODO: Support different widths
+        Store _ rs2 rs1 imm ->
             let (cpu'', output) = continue $ next cpu'
             in (cpu'', output { poke = Just (addr $ alu AddA (reg cpu' rs2) (signExtend $ imm `shiftL` 1), reg cpu' rs1) })
         Branch branch rs2 rs1 imm ->
