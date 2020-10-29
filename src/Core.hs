@@ -114,7 +114,7 @@ next :: Cpu -> Cpu
 next cpu' = cpu' { pc = incr $ pc cpu' }
 
 decode :: BitVector 32 -> Instr
-decode instr = undefined
+decode = undefined
 
 val :: Addr -> Value
 val = pack
