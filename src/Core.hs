@@ -105,7 +105,7 @@ exec cpu' instr =
         Jump (JAL rd imm) ->
             jump cpu' rd (val $ pc cpu') (signExtend $ imm `shiftL` 1)
         Jump (JALR rd rs imm) ->
-            jump cpu' rd (reg cpu' rd) (signExtend imm)
+            jump cpu' rd (reg cpu' rs) (signExtend imm)
 
 incr :: Addr -> Addr
 incr pc' = pc' + 4
