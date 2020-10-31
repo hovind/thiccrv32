@@ -2,6 +2,7 @@ module Core where
 
 import Clash.Prelude
 import Clash.RISCV
+import Clash.RISCV.Decode
 
 data Computation
     = ALU OpA
@@ -112,9 +113,6 @@ incr pc' = pc' + 4
 
 next :: Cpu -> Cpu
 next cpu' = cpu' { pc = incr $ pc cpu' }
-
-decode :: BitVector 32 -> Instr
-decode = undefined
 
 val :: Addr -> Value
 val = pack

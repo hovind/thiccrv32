@@ -42,7 +42,8 @@ library
   exposed-modules:
     Core,
     Clash.RISCV,
-    Clash.RISCV.Asm
+    Clash.RISCV.Asm,
+    Clash.RISCV.Decode
   hs-source-dirs:    src
 
 executable clash
