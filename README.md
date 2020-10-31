@@ -13,6 +13,7 @@ Risc-V core goes here, hopefully in a couple of years.
 1. Build cache hierarchy
 1. Predict some branches
 1. Synthesize! With Shake of course
+1. `cabal run clash --write-ghc-environment-files=always -- Core --verilog`
 
 
 
