@@ -10,6 +10,7 @@ extra-source-files:  README.md, CHANGELOG.md
 
 common common-options
   default-extensions:
+    BinaryLiterals,
     DataKinds,
     DeriveAnyClass,
     DeriveGeneric,
