@@ -4,11 +4,11 @@ Risc-V core goes here, hopefully in a couple of years.
 
 ### TODO
 
-1. Implement ALU and CLU
+1. ~Implement ALU and CLU~
 1. Implement decoding
 1. Implement RVFI
 1. Simulate with Verilator or some custom Rust simulator yeeehaw!
-1. Use Shake to build
+1. Use Shake to build, synthesize and verilate
 1. Pipeline!
 1. Build cache hierarchy
 1. Predict some branches
