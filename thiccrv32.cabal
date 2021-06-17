@@ -76,9 +76,14 @@ test-suite test-library
   main-is: Test.hs
   other-modules:
     Tests.Clash.RISCV.Decode
+    Tests.Clash.RISCV.Spec
   build-depends:
     thiccrv32,
-    QuickCheck,
+    bytestring,
+    directory,
+    elf,
     hedgehog,
+    QuickCheck,
     tasty,
     tasty-hedgehog,
+    tasty-hunit,
