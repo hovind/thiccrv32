@@ -6,10 +6,11 @@ type XLen = 32 -- Register width
 type NReg = 32 -- Number of registers
 
 type Word = BitVector 32
-type Value = BitVector XLen
-type Register = Index NReg
+type Value = BitVector 32
+type Register = Index 32
 
 type Addr = Unsigned 32
+type Memory = Vec (2 ^ XLen) Value
 
 data Instr
     = Reg !Op !Register !Register !Register
@@ -43,12 +44,34 @@ data Op
 data OpI
     = AddI
     | SLTI !Sign
-    | AndI
-    | OrI
     | XOrI
+    | OrI
+    | AndI
     | SLLI
     | SRLI
     | SRAI
+
+instance BitPack OpI where
+    type BitSize OpI = 3
+    pack AddI            = 0b000
+    pack (SLTI Signed)   = 0b010
+    pack (SLTI Unsigned) = 0b010
+    pack XOrI            = 0b100
+    pack OrI             = 0b110
+    pack AndI            = 0b111
+    pack SLLI            = 0b001
+    pack SRLI            = 0b101
+    pack SRAI            = 0b101
+
+    unpack 0b000 = AddI
+    unpack 0b010 = SLTI Signed
+    unpack 0b010 = SLTI Unsigned
+    unpack 0b100 = XOrI
+    unpack 0b110 = OrI
+    unpack 0b111 = AndI
+    unpack 0b001 = SLLI
+    unpack 0b101 = SRLI
+    unpack 0b101 = SRAI
 
 data Width
     = Word
@@ -66,4 +89,3 @@ data Branch
     | BNE
     | BLT !Sign
     | BGE !Sign
-

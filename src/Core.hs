@@ -166,18 +166,23 @@ data Stage
 
 memory
   :: (HiddenClock dom, HiddenEnable dom)
-  => Signal dom CpuOut
+  => Memory
+  -> Signal dom CpuOut
   -> Signal dom CpuIn
-memory cpuOut = CpuIn <$> blockRamPow2 (repeat 0 :: Vec (2 ^ 32) (BitVector 32)) peek' poke'
+memory memoryIn cpuOut = CpuIn <$> blockRamPow2 memoryIn peek' poke'
   where
     CpuOut peek' poke' = unbundle cpuOut
 
-system :: HiddenClockResetEnable dom => Signal dom (BitVector 32)
-system = dataIn <$> memoryOut
+system
+  :: HiddenClockResetEnable dom
+  => Memory
+  -> Addr
+  -> Signal dom Value
+system memoryIn entry = dataIn <$> memoryOut
   where
-    memoryOut = memory cpuOut
+    memoryOut = memory memoryIn cpuOut
     cpuOut = mealy cpu cpu' memoryOut
-    cpu' = Cpu { pc = 0, stage = Initialising, registers = replicate d32 0, trap = () }
+    cpu' = Cpu { pc = entry, stage = Initialising, registers = replicate d32 0, trap = () }
 
 cpu :: Cpu -> CpuIn -> (Cpu, CpuOut)
 cpu cpu' input =
