@@ -5,7 +5,6 @@ import Clash.Prelude
 type XLen = 32 -- Register width
 type NReg = 32 -- Number of registers
 
-type Word = BitVector 32
 type Value = BitVector 32
 type Register = Index 32
 
@@ -89,3 +88,20 @@ data Branch
     | BNE
     | BLT !Sign
     | BGE !Sign
+
+instance BitPack Branch where
+    type BitSize Branch = 3
+    pack BEq            = 0b000
+    pack BNE            = 0b001
+    pack (BLT Signed)   = 0b100
+    pack (BGE Signed)   = 0b101
+    pack (BLT Unsigned) = 0b110
+    pack (BGE Unsigned) = 0b111
+
+    unpack 0b000 = BEq
+    unpack 0b001 = BNE
+    unpack 0b100 = BLT Signed
+    unpack 0b101 = BGE Signed
+    unpack 0b110 = BLT Unsigned
+    unpack 0b111 = BGE Unsigned
+    unpack     _ = errorX "Not a valid branch function"
