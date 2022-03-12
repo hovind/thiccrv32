@@ -16,6 +16,7 @@ common common-options
     DeriveGeneric,
     DuplicateRecordFields,
     NoImplicitPrelude,
+    TypeApplications,
     TypeFamilies,
     TypeOperators,
   ghc-options:
@@ -79,6 +80,7 @@ test-suite test-library
     Tests.Clash.RISCV.Spec
   build-depends:
     thiccrv32,
+    binary-strict,
     bytestring,
     directory,
     elf,

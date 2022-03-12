@@ -3,6 +3,7 @@ module Core where
 import Clash.Prelude
 import Clash.RISCV
 import Clash.RISCV.Decode
+import Data.Bifunctor
 
 data Computation
     = ALU OpA
@@ -135,7 +136,11 @@ data CpuOut' a b = CpuOut
     , poke :: !b
     }
 
-type CpuOut = CpuOut' Addr (Maybe (Addr, BitVector 32))
+instance Bifunctor CpuOut' where
+  bimap f g (CpuOut a b) = CpuOut (f a) (g b)
+
+type CpuOut = CpuOut' Addr (Maybe (Addr, Value))
+type MmuOut = CpuOut' PhysAddr (Maybe (PhysAddr, Value))
 
 instance Bundle (CpuOut' a b) where
   type Unbundled t (CpuOut' a b) = CpuOut' (Signal t a) (Signal t b)
@@ -164,6 +169,15 @@ data Stage
     | Loading !Width !Register -- Don't advance PC
     deriving (Generic, NFDataX)
 
+phys :: Addr -> PhysAddr
+phys = truncateB
+
+virt :: PhysAddr -> Addr
+virt = zeroExtend
+
+mmu :: CpuOut -> MmuOut
+mmu = bimap phys (fmap (first phys))
+
 memory
   :: (HiddenClock dom, HiddenEnable dom)
   => Memory
@@ -171,7 +185,7 @@ memory
   -> Signal dom CpuIn
 memory memoryIn cpuOut = CpuIn <$> blockRamPow2 memoryIn peek' poke'
   where
-    CpuOut peek' poke' = unbundle cpuOut
+    CpuOut peek' poke' = unbundle $ mmu <$> cpuOut
 
 system
   :: HiddenClockResetEnable dom

@@ -4,6 +4,7 @@ import Clash.Prelude
 import Clash.RISCV
 import Clash.RISCV.Asm
 import Data.Either
+import Data.List
 
 decode :: BitVector 32 -> Instr
 decode instr =
@@ -13,7 +14,7 @@ decode instr =
            (bv2i $ slice d19 d15 instr)
            (slice d31 d20 instr)
     _ ->
-      errorX "Could not decode"
+      errorX $ Data.List.intercalate " " [ "Could not decode instruction:", show instr, " opcode:",  show opCode ]
   where
     opCode = slice d6 d0 instr
 
