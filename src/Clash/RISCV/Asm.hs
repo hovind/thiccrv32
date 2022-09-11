@@ -18,6 +18,9 @@ x2 = 2
 addi :: Register -> Register -> BitVector 12 -> Instr
 addi = Imm AddI
 
+jal :: Register -> BitVector 20 -> Instr
+jal rd = Jump . JAL rd
+
 mov :: Register -> Register -> Instr
 mov rd rs = addi rd rs 0
 
